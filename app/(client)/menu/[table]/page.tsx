@@ -148,25 +148,6 @@ const page = () => {
     return orderProducts.reduce((total, product) => total + product.quantity * product.price, 0)
   }, [orderProducts])
 
-  const handleLaunchOrder = useCallback(async () => {
-    try {
-      if (orderProducts.length === 0) {
-        toast.error("Veuillez ajouter des produits à la commande")
-        return
-      }
-      setIsLaunching(true)
-      await launchOrder({
-        tableId: tableId || '',
-        products: orderProducts
-      })
-      toast.success("Commande lancée avec succès")
-      setOrderProducts([])
-    } catch (error) {
-      toast.error("Réessayez!! Erreur lors de la création de la commande")
-    } finally {
-      setIsLaunching(false)
-    }
-  }, [orderProducts, tableId])
 
   const filteredProducts = useMemo(() => {
     return selectedCategory
@@ -177,9 +158,9 @@ const page = () => {
     <main className='min-h-screen px-2 md:px-4 pb-20'>
       <Navbar />
 
-      <div className='w-full flex items-center justify-center mt-4'>
+      <div className='w-full flex items-center justify-center mt-20'>
         <Input
-          className='w-full max-w-md'
+          className='w-full max-w-md  rounded-full border-gray-300 dark:border-gray-600 focus:border-primary dark:focus:border-primary'
           type='text'
           placeholder={`Rechercher...`}
           disabled={isRestaurantLoading}
@@ -254,11 +235,12 @@ const page = () => {
             calculateTotalPrice={calculateTotalPrice}
             handleQuantityChange={handleQuantityChange}
             handleRemoveProduct={handleRemoveProduct}
+            isLaunching={isLaunching}
+            setIsLaunching={setIsLaunching}
           >
             <Button
               className='w-full max-w-md p-4 rounded-full'
               id='launch-order-button'
-              onClick={handleLaunchOrder}
               disabled={isLaunching}
             >
               <span className='text-sm'>Total: {calculateTotalPrice().toFixed(2)} {devise}</span>

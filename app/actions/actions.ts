@@ -221,10 +221,10 @@ export async function CreateCategory({ categoryName, categoryDescription }: { ca
 
 export async function getRestaurantCategories(): Promise<Category[]> {
   try {
-    const connectedUser = await getUser();
-    if (!connectedUser || !connectedUser.id) {
-      throw new Error("User not authenticated");
-    }
+    // const connectedUser = await getUser();
+    // if (!connectedUser || !connectedUser.id) {
+    //   throw new Error("User not authenticated");
+    // }
 
     const userRestaurant = await prisma.restaurant.findFirst();
     if (!userRestaurant) {
@@ -324,10 +324,10 @@ export async function getCategoryProducts(categoryId: string): Promise<Product[]
 /* Products */
 export async function getRestaurantProducts(): Promise<Product[]> {
   try {
-    const connectedUser = await getUser();
-    if (!connectedUser || !connectedUser.id) {
-      throw new Error("User not authenticated");
-    }
+    // const connectedUser = await getUser();
+    // if (!connectedUser || !connectedUser.id) {
+    //   throw new Error("User not authenticated");
+    // }
 
     const userRestaurant = await prisma.restaurant.findFirst();
     if (!userRestaurant) {

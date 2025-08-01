@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import {
     Credenza,
     CredenzaBody,
@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Loader, ShoppingBasket, Trash } from 'lucide-react'
 import { OrderDetails } from '@/lib/types'
+import { launchOrder } from '@/app/actions/statistics'
 
 
 type Props = {
@@ -23,24 +24,37 @@ type Props = {
     calculateTotalPrice: () => number
     handleQuantityChange: (productId: string, newQuantity: number) => void
     handleRemoveProduct: (productId: string) => void
+    isLaunching?: boolean
+    setIsLaunching: (isLaunching: boolean) => void
 }
 
-const ClientOrderComponent = ({ children, clientOrder, calculateTotalPrice, handleQuantityChange, handleRemoveProduct }: Props) => {
+const ClientOrderComponent = ({ children, clientOrder, calculateTotalPrice, handleQuantityChange, handleRemoveProduct, setIsLaunching, isLaunching }: Props) => {
     const [clientName, setClientName] = useState<string>('');
-    const [isLaunching, setIsLaunching] = useState<boolean>(false);
     const [open, setOpen] = useState<boolean>(false);
 
-    const handleLaunchOrder = async () => {
+    const handleLaunchOrder = useCallback(async () => {
         try {
-            setIsLaunching(true);
-            // const order = await CreateOrder(clientOrder);
-            toast.success("Commande lancée avec succès");
+          if (clientOrder.orderItems.length === 0) {
+            toast.error("Veuillez ajouter des produits à la commande")
+            return
+          }
+          setIsLaunching(true)
+          await launchOrder({
+            tableId: clientOrder.tableId || '',
+            products: clientOrder.orderItems.map(item => ({
+              productId: item.productId,
+              quantity: item.quantity,
+                price: item.price,
+            })),
+            clientName: clientName || undefined,
+          })
+          toast.success("Commande lancée avec succès")
         } catch (error) {
-            toast.error("Une erreur s'est produite lors du lancement de la commande.");
+          toast.error("Réessayez!! Erreur lors de la création de la commande")
         } finally {
-            setIsLaunching(false);
+          setIsLaunching(false)
         }
-    }
+      }, [])
     return (
         <Credenza open={open} onOpenChange={setOpen}>
             <CredenzaTrigger asChild>
