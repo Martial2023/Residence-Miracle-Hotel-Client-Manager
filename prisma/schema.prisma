@@ -1,0 +1,176 @@
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String      @id
+  name          String
+  email         String
+  emailVerified Boolean
+  image         String?
+  restaurant    Restaurant? @relation(fields: [restaurantId], references: [id])
+  restaurantId  String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  sessions      Session[]
+  accounts      Account[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+}
+
+/**
+ * Models
+ */
+model Restaurant {
+  id          String     @id @default(uuid())
+  name        String
+  address     String?
+  logo        String?
+  description String?
+  phone       String?
+  email       String[]
+  website     String?
+  users       User[]     @relation
+  categories  Category[] @relation
+  tables      Table[]    @relation
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  products     Product[]
+
+  @@map("restaurant")
+}
+
+model Category {
+  id           String     @id @default(uuid())
+  name         String
+  description  String?
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  products     Product[]  @relation
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@map("category")
+}
+
+model Product {
+  id           String      @id @default(uuid())
+  name         String
+  description  String?
+  price        Float
+  categoryId   String
+  images       String[]
+  stock        Int
+  outOfStock   Int         @default(10)
+  restaurantId String
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  category     Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  orderItems   OrderItem[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@map("product")
+}
+
+model Table {
+  id           String      @id @default(uuid())
+  name         String
+  restaurantId String
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  orderItems   OrderItem[]
+  Orders       Order[]
+
+  @@map("table")
+}
+
+enum OrderStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELED
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int      @default(1)
+  price     Float   // Price at the time of order (in case product price changes)
+  tableId   String?
+  table     Table?   @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([orderId, productId])
+  @@map("order_item")
+}
+
+model Order {
+  id         String      @id @default(uuid())
+  clientName String?
+  tableId    String
+  table      Table      @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  status     OrderStatus @default(PENDING)
+  orderItems OrderItem[]
+  total      Float?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@map("order")
+}
