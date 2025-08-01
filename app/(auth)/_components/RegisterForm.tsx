@@ -6,10 +6,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { FcGoogle } from 'react-icons/fc'
-import { useState, ChangeEvent } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { signIn, signUp } from "@/lib/auth-client"
-import { FaGithub } from "react-icons/fa"
 import { toast } from "sonner"
 import { Loader } from "lucide-react"
 
@@ -25,7 +24,6 @@ const RegisterForm = ({
     const [passwordConfirmation, setPasswordConfirmation] = useState("")
     const [isSignupWithEmail, setIsSignupWithEmail] = useState<boolean>(false)
     const [isSignupWithGoogle, setIsSignupWithGoogle] = useState<boolean>(false)
-    const [isSignupWithGithub, setIsSignupWithGithub] = useState<boolean>(false)
     const router = useRouter()
 
     const registerWithEmail = async () => {
@@ -89,7 +87,7 @@ const RegisterForm = ({
                             <div className="flex flex-col items-center text-center">
                                 <h1 className="text-2xl font-bold">Inscription</h1>
                                 <p className="text-balance text-muted-foreground">
-                                    Créer un compte DataDialog
+                                    Créer un compte ClientManager
                                 </p>
                             </div>
                             <div className="grid gap-2">

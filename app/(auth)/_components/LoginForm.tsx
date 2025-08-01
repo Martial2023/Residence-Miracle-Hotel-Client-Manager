@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { FcGoogle } from 'react-icons/fc'
-import { FaGithub } from 'react-icons/fa'
 import React, { useState } from "react"
 import { Loader } from 'lucide-react'
 import { signIn } from "@/lib/auth-client"
@@ -23,7 +22,6 @@ const LoginForm = ({
     const [loading, setLoading] = useState(false)
     const [isSigninWithEmail, setIsSigninWithEmail] = useState<boolean>(false)
     const [isSigninWithGoogle, setIsSigninWithGoogle] = useState<boolean>(false)
-    const [isSigninWithGithub, setIsSigninWithGithub] = useState<boolean>(false)
     const router = useRouter()
 
     return (
