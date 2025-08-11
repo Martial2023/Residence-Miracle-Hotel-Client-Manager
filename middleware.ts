@@ -13,7 +13,8 @@ export async function middleware(req: NextRequest) {
     }
     // 4. Autoriser l'accès aux pages de type /post/[postId] même si l'utilisateur n'est pas connecté
     const postPageRegex = /^\/menu\/[^\/]+$/;
-    if (postPageRegex.test(pathname)) {
+    const clientOrderRegex = /^\/menu\/[^\/]+\/client-order$/;
+    if (postPageRegex.test(pathname) || clientOrderRegex.test(pathname)) {
         return NextResponse.next();
     }
 
