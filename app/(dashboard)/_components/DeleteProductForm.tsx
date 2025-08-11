@@ -50,7 +50,7 @@ const DeleteProductForm = ({ children, productId, setRestaurantProducts, name }:
             <CredenzaTrigger asChild>
                 {children}
             </CredenzaTrigger>
-            <CredenzaContent className='dark:bg-zinc-900'>
+            <CredenzaContent className='dark:bg-zinc-900 pb-6 md:pb-2'>
                 <CredenzaHeader>
                     <CredenzaTitle className='flex items-center gap-2'>
                         <ShoppingBasket className='size-5 inline-block' />

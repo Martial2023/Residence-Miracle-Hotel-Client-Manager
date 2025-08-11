@@ -101,29 +101,29 @@ const statusFilterFn: FilterFn<OrderProps> = (
 }
 
 const columns: ColumnDef<OrderProps>[] = [
-    {
-        id: "select",
-        header: ({ table }) => (
-            <Checkbox
-                checked={
-                    table.getIsAllPageRowsSelected() ||
-                    (table.getIsSomePageRowsSelected() && "indeterminate")
-                }
-                onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-                aria-label="Select all"
-            />
-        ),
-        cell: ({ row }) => (
-            <Checkbox
-                checked={row.getIsSelected()}
-                onCheckedChange={(value) => row.toggleSelected(!!value)}
-                aria-label="Select row"
-            />
-        ),
-        size: 28,
-        enableSorting: false,
-        enableHiding: false,
-    },
+    // {
+    //     id: "select",
+    //     header: ({ table }) => (
+    //         <Checkbox
+    //             checked={
+    //                 table.getIsAllPageRowsSelected() ||
+    //                 (table.getIsSomePageRowsSelected() && "indeterminate")
+    //             }
+    //             onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+    //             aria-label="Select all"
+    //         />
+    //     ),
+    //     cell: ({ row }) => (
+    //         <Checkbox
+    //             checked={row.getIsSelected()}
+    //             onCheckedChange={(value) => row.toggleSelected(!!value)}
+    //             aria-label="Select row"
+    //         />
+    //     ),
+    //     size: 28,
+    //     enableSorting: false,
+    //     enableHiding: false,
+    // },
     {
         header: "Table",
         accessorKey: "tableName",
@@ -140,22 +140,6 @@ const columns: ColumnDef<OrderProps>[] = [
         size: 220,
     },
     {
-        header: "Status",
-        accessorKey: "status",
-        cell: ({ row }) => (
-            <Badge
-                className={cn(
-                    row.getValue("status") === "Inactive" &&
-                    "bg-muted-foreground/60 text-primary-foreground"
-                )}
-            >
-                {row.getValue("status")}
-            </Badge>
-        ),
-        size: 100,
-        filterFn: statusFilterFn,
-    },
-    {
         header: "Prix",
         accessorKey: "total",
         cell: ({ row }) => {
@@ -163,6 +147,21 @@ const columns: ColumnDef<OrderProps>[] = [
             return `${amount}${process.env.NEXT_PUBLIC_DEVISE || "FCFA"}`
         },
         size: 120,
+    },
+    {
+        header: "Status",
+        accessorKey: "status",
+        cell: ({ row }) => (
+            <Badge
+                className={cn(
+                    row.getValue("status") === "COMPLETED"? "bg-green-500" : "text-primary-foreground"
+                )}
+            >
+                {row.getValue("status")==="COMPLETED" ? "Validée" : "Non traitée"}
+            </Badge>
+        ),
+        size: 100,
+        filterFn: statusFilterFn,
     },
     {
         id: "actions",
@@ -175,22 +174,25 @@ const columns: ColumnDef<OrderProps>[] = [
 
 type Props = {
     period: PeriodTypes;
+    setRestaurantOrdersForStats: (restaurantOrders: OrderProps[]) => void
 }
-export default function Component({ period }: Props) {
+const REFRESH_TIME = 4
+export default function Component({ period, setRestaurantOrdersForStats }: Props) {
+    const [counterRefresh, setCounterRefresh] = useState<number>(REFRESH_TIME)
     const [loading, setLoading] = useState<boolean>(false)
     const id = useId()
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
     const [pagination, setPagination] = useState<PaginationState>({
         pageIndex: 0,
-        pageSize: 10,
+        pageSize: 25,
     })
     const inputRef = useRef<HTMLInputElement>(null)
 
     const [sorting, setSorting] = useState<SortingState>([
         {
             id: "status",
-            desc: false,
+            desc: true,
         },
     ])
     const [newValidate, setNewValidate] = useState<boolean>(false)
@@ -211,6 +213,19 @@ export default function Component({ period }: Props) {
         fetchRestaurantOrders()
     }, [period])
 
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            setCounterRefresh((prev) => prev - 1);
+            if (counterRefresh <= 1 && period === "TODAY") {
+                setCounterRefresh(REFRESH_TIME);
+                const orders = await getOrders(period);
+                setData(orders);
+                setRestaurantOrdersForStats(orders);
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [counterRefresh, period]);
 
     const handleDeleteRows = () => {
         const selectedRows = table.getSelectedRowModel().rows
@@ -360,7 +375,7 @@ export default function Component({ period }: Props) {
                                                 htmlFor={`${id}-${i}`}
                                                 className="flex grow justify-between gap-2 font-normal"
                                             >
-                                                {value}{" "}
+                                                {value === "COMPLETED" ? "Validée" : "Non traitée"}{" "}
                                                 <span className="text-muted-foreground ms-2 text-xs">
                                                     {statusCounts.get(value)}
                                                 </span>
@@ -452,48 +467,58 @@ export default function Component({ period }: Props) {
                         ))}
                     </TableHeader>
                     <TableBody>
-                        {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
-                                <ShowOrderDetails
-                                    key={row.id}
-                                    orderId={row.original.id}
-                                    clientName={row.original.clientName || ''}
-                                    newValidate={newValidate}
-                                    setNewValidate={setNewValidate}
-                                >
-                                    <TableRow
-                                        className="cursor-pointer"
-                                        key={row.id}
-                                        data-state={row.getIsSelected() && "selected"}
+                        {
+                            loading ? (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={columns.length}
+                                        className="h-24 text-center"
                                     >
-                                        {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id} className="last:py-0">
-                                                {flexRender(
-                                                    cell.column.columnDef.cell,
-                                                    cell.getContext()
-                                                )}
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
-                                </ShowOrderDetails>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell
-                                    colSpan={columns.length}
-                                    className="h-24 text-center"
-                                >
-                                    {loading ? (
                                         <div className="flex flex-col items-center justify-center w-full">
                                             <Loader className="w-4 h-4 animate-spin" />
                                             <span className="text-muted-foreground mt-2">
                                                 Chargement des commandes...
                                             </span>
                                         </div>
-                                    ) : "Aucune commande trouvée"}
-                                </TableCell>
-                            </TableRow>
-                        )}
+                                    </TableCell>
+                                </TableRow>
+
+                            ) :
+                                table.getRowModel().rows?.length ? (
+                                    table.getRowModel().rows.map((row) => (
+                                        <ShowOrderDetails
+                                            key={row.id}
+                                            orderId={row.original.id}
+                                            clientName={row.original.clientName || ''}
+                                            newValidate={newValidate}
+                                            setNewValidate={setNewValidate}
+                                        >
+                                            <TableRow
+                                                className="cursor-pointer"
+                                                key={row.id}
+                                                data-state={row.getIsSelected() && "selected"}
+                                            >
+                                                {row.getVisibleCells().map((cell) => (
+                                                    <TableCell key={cell.id} className="last:py-0">
+                                                        {flexRender(
+                                                            cell.column.columnDef.cell,
+                                                            cell.getContext()
+                                                        )}
+                                                    </TableCell>
+                                                ))}
+                                            </TableRow>
+                                        </ShowOrderDetails>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={columns.length}
+                                            className="h-24 text-center"
+                                        >
+                                            Aucune commande trouvée
+                                        </TableCell>
+                                    </TableRow>
+                                )}
                     </TableBody>
                 </Table>
             </div>
@@ -611,7 +636,7 @@ export default function Component({ period }: Props) {
                     </Pagination>
                 </div>
             </div>
-        </div>
+        </div >
     )
 }
 

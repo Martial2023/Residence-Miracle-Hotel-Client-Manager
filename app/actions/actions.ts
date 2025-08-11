@@ -76,26 +76,26 @@ export async function getRestaurantTables({ start, end }: RestaurantTablesParams
     const tables = await prisma.table.findMany({
       where: { restaurantId: userRestaurant.id },
       include: {
-        orderItems: true
+        Orders: {
+          select: {
+            id: true,
+            createdAt: true,
+            orderItems: {
+              select: {
+                id: true,
+                price: true
+              }
+            }
+          }
+        }
       },
       orderBy: {
         updatedAt: 'desc'
       }
     });
 
-    return tables.map(table => {
-      const filteredOrderItems = table.orderItems.filter(orderItem => {
-        const orderDate = orderItem.createdAt;
-        if (start && end) {
-          return orderDate >= start && orderDate <= end;
-        } else if (start) {
-          return orderDate >= start;
-        } else if (end) {
-          return orderDate <= end;
-        }
-        return true; // Include all orderItems if no date filters are provided
-      });
-
+    const response = tables.map(table => {
+      const filteredOrderItems = table.Orders.flatMap(order => order.orderItems)
       const totalPrice = filteredOrderItems.reduce((sum, orderItem) => sum + orderItem.price, 0);
 
       return {
@@ -104,6 +104,8 @@ export async function getRestaurantTables({ start, end }: RestaurantTablesParams
         totalPrice
       };
     });
+    console.log("Response:\n", response);
+    return response;
   } catch (error) {
     console.error("Error fetching restaurant tables:", error);
     throw new Error("Failed to fetch restaurant tables");
@@ -388,6 +390,40 @@ export async function CreateProduct({ name, description, price, images, stock, c
   } catch (error) {
     console.error("Error creating product:", error);
     throw new Error("Failed to create product");
+  }
+}
+
+export async function UpdateProduct({ id, name, description, price, images, stock, categoryId }: { id: string; name: string; description?: string; price: number; images?: string[]; stock: number; categoryId: string }): Promise<Product> {
+  try {
+    const connectedUser = await getUser();
+    if (!connectedUser || !connectedUser.id) {
+      throw new Error("User not authenticated");
+    }
+
+    const userRestaurant = await prisma.restaurant.findFirst();
+    if (!userRestaurant) {
+      throw new Error("Restaurant not found");
+    }
+
+    const updatedProduct = await prisma.product.update({
+      where: { id },
+      data: {
+        name,
+        description,
+        price,
+        images,
+        stock,
+        categoryId
+      }
+    });
+
+    return {
+      ...updatedProduct,
+      sold: 0
+    };
+  } catch (error) {
+    console.error("Error updating product:", error);
+    throw new Error("Failed to update product");
   }
 }
 

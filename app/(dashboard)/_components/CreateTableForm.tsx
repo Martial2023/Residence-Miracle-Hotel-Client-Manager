@@ -57,7 +57,7 @@ const CreateTableForm = ({ children, setTables }: Props) => {
                         Créer une nouvelle table pour votre restaurant
                     </CredenzaDescription>
                 </CredenzaHeader>
-                <CredenzaBody>
+                <CredenzaBody className='pb-6 md:pb-4'>
                     <div>
                         <Input
                             value={tableName}

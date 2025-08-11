@@ -34,7 +34,7 @@ const Page = () => {
     }, [])
 
     return (
-        <main className='min-h-screen'>
+        <main className='min-h-screen px-4 md:px-8 py-6 space-y-6'>
             <div className="flex items-center justify-between p-4">
                 <h4 className="text-2xl font-bold">Catégories</h4>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
@@ -51,7 +51,7 @@ const Page = () => {
                 <CreateCategoryForm
                     setCategories={setRestaurantCategories}
                 >
-                    <Button variant={"outline"} className='m-4 text-primary/70 hover:text-primary/80 dark:text-white dark:hover:text-white'>
+                    <Button className='text-white'>
                         Créer une catégorie
                     </Button>
                 </CreateCategoryForm>

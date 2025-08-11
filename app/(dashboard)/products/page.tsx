@@ -15,9 +15,6 @@ import { Badge } from '@/components/ui/badge'
 const Page = () => {
     const [restaurantProducts, setRestaurantProducts] = useState<Product[]>([])
     const [loading, setLoading] = useState<boolean>(true)
-    const [startDate, setStartDate] = useState<Date | null>(null)
-    const [endDate, setEndDate] = useState<Date | null>(null)
-
 
     const fetchRestaurantProducts = async () => {
         try {
@@ -33,9 +30,9 @@ const Page = () => {
 
     useEffect(() => {
         fetchRestaurantProducts()
-    }, [startDate, endDate])
+    }, [])
     return (
-        <main className='min-h-screen'>
+        <main className='min-h-screen px-4 md:px-8 py-6 space-y-4'>
             <div className="flex items-center justify-between p-4">
                 <h4 className="text-2xl font-bold">Menu</h4>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
@@ -48,39 +45,13 @@ const Page = () => {
                 </p>
             </div>
 
-            <div className='flex items-center justify-between p-4'>
+            <div className='flex items-center justify-between p-4 pt-0'>
                 <CreateProductForm setRestaurantProducts={setRestaurantProducts}>
-                    <Button variant={"outline"} className='mt-4 text-primary/70 hover:text-primary/80'>
+                    <Button className='text-white'>
                         Créer un produit
                     </Button>
                 </CreateProductForm>
             </div>
-{/* 
-            <div className='flex flex-col gap-2 items-center justify-center p-4'>
-                <div className='flex flex-col md:flex-row items-center gap-4 w-full md:max-w-8/10 rounded-xl bg-white dark:bg-zinc-800 p-6 shadow-md'>
-                    <div className='flex flex-col md:flex-row items-center gap-2 w-full'>
-                        <label htmlFor="startDate" className='text-sm font-medium md:whitespace-nowrap'>Date de début:</label>
-                        <input
-                            type="date"
-                            id="startDate"
-                            value={startDate ? startDate.toISOString().split('T')[0] : ''}
-                            onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : null)}
-                            className='border rounded-md p-2 w-full md:w-auto focus:outline-none focus:ring-2 focus:ring-primary'
-                        />
-                    </div>
-
-                    <div className='flex flex-col md:flex-row items-center gap-2 w-full'>
-                        <label htmlFor="endDate" className='text-sm font-medium md:whitespace-nowrap'>Date de fin:</label>
-                        <input
-                            type="date"
-                            id="endDate"
-                            value={endDate ? endDate.toISOString().split('T')[0] : ''}
-                            onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : null)}
-                            className='border rounded-md p-2 w-full md:w-auto focus:outline-none focus:ring-2 focus:ring-primary'
-                        />
-                    </div>
-                </div>
-            </div> */}
 
             {
                 loading && (
@@ -159,13 +130,15 @@ const Page = () => {
                                                 </Button>
                                             </DeleteProductForm>
 
-                                            <DeleteProductForm
+                                            <CreateProductForm
                                                 setRestaurantProducts={setRestaurantProducts}
-                                                productId={product.id} name={product.name}>
+                                                isUpdate={true}
+                                                oldProduct={product}
+                                            >
                                                 <Button size={"sm"} className='bg-blue-500 text-white hover:bg-blue-600'>
                                                     <Edit className='size-4' />
                                                 </Button>
-                                            </DeleteProductForm>
+                                            </CreateProductForm>
                                         </div>
                                     </div>
                                 </Card>

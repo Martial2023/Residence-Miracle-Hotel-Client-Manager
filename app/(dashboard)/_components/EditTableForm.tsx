@@ -58,7 +58,7 @@ const EditTableForm = ({ children, tableId, name }: Props) => {
             <CredenzaTrigger asChild>
                 {children}
             </CredenzaTrigger>
-            <CredenzaContent>
+            <CredenzaContent className='dark:bg-zinc-900'>
                 <CredenzaHeader>
                     <CredenzaTitle className='flex items-center gap-2'>
                         <Table2 className='size-5 inline-block' />
@@ -68,7 +68,7 @@ const EditTableForm = ({ children, tableId, name }: Props) => {
                         Mettre à jour la table pour votre restaurant
                     </CredenzaDescription>
                 </CredenzaHeader>
-                <CredenzaBody>
+                <CredenzaBody className='pb-6 md:pb-2'>
                     <div>
                         <Input
                             value={tableName}

@@ -37,7 +37,7 @@ export function ShowOrderDetails({ children, orderId, clientName, newValidate, s
         try {
             setLoading(true)
             if (!orderId) {
-                toast.error("ID de la commande manquant")
+                toast.error("Commande manquante")
                 return
             }
             const response = await getOrderDetails(orderId)
@@ -111,7 +111,7 @@ export function ShowOrderDetails({ children, orderId, clientName, newValidate, s
             <SheetTrigger asChild>
                 {children}
             </SheetTrigger>
-            <SheetContent className='dark:bg-zinc-900'>
+            <SheetContent className='dark:bg-zinc-900 w-8/10'>
                 <SheetHeader>
                     <SheetTitle>
                         <div className='flex items-center gap-4'>
@@ -142,7 +142,7 @@ export function ShowOrderDetails({ children, orderId, clientName, newValidate, s
                         </div>
                     )}
                     {!loading && orderDetails?.orderItems.map(item => (
-                        <div key={item.product.id} className="flex items-center justify-between p-4 border rounded-lg dark:border-zinc-700">
+                        <div key={item.product.id} className="flex items-center justify-between p-2 border rounded-lg dark:border-zinc-700">
                             <div className="flex items-center gap-4">
                                 <img src={item.product.image ?? ''} alt={item.product.name} className="w-16 h-16 rounded-lg object-cover" />
                                 <div>
@@ -157,7 +157,7 @@ export function ShowOrderDetails({ children, orderId, clientName, newValidate, s
                                     onChange={(e) => handleQuantityChange(item.product.id, parseInt(e.target.value))}
                                     className="w-16"
                                 />
-                                <Button variant="destructive" onClick={() => handleRemoveProduct(item.product.id)}>
+                                <Button variant="destructive" size={"sm"} onClick={() => handleRemoveProduct(item.product.id)}>
                                     <Trash className="w-5 h-5" />
                                 </Button>
                             </div>
@@ -165,16 +165,21 @@ export function ShowOrderDetails({ children, orderId, clientName, newValidate, s
                     ))}
                 </div>
                 <SheetFooter>
-                    <div className='flex items-center justify-between gap-2 w-full'>
-                        <Button variant={"outline"} className='flex-1'>
+                    <div className='flex flex-cols md:flex-rows items-center justify-between gap-2 w-full'>
+                        {/* <Button variant={"outline"} className='flex-1'>
                             Ajouter un produit
-                        </Button>
+                        </Button> */}
 
-                        <Button className='bg-green-500 flex-1'
-                            onClick={handleValidateOrder} disabled={loading}
-                        >
-                            {validating ? <Loader className="w-4 h-4 animate-spin" /> : <><Check className='w-5 h-5' /> Valider la commande</>}
-                        </Button>
+                        {
+                            orderDetails?.status !== "COMPLETED" && (
+                                <Button className='bg-green-400 hover:bg-green-500 flex-1'
+                                    onClick={handleValidateOrder} 
+                                    disabled={loading}
+                                >
+                                    {validating ? <Loader className="w-4 h-4 animate-spin" /> : <><Check className='w-5 h-5' /> Valider la commande</>}
+                                </Button>
+                            )
+                        }
                     </div>
                     <SheetClose asChild>
                         <Button variant="outline">Fermer</Button>

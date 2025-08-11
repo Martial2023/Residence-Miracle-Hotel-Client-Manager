@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button'
 import { OrderProps, PeriodTypes } from '@/lib/types'
 import { ShoppingBasket } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import OrdersStatsComponent from './_components/OrdersStatsComponent'
@@ -10,6 +10,7 @@ import { getOrders } from '@/app/actions/statistics'
 import ShowOrders from './_components/ShowOrders'
 import AddOrderComponent from './_components/AddOrderComponent'
 
+const REFRESH_TIME = 4 // seconds;
 const Page = () => {
     const [period, setPeriod] = useState<PeriodTypes>("TODAY")
     const [restaurantOrders, setRestaurantOrders] = useState<OrderProps[]>([])
@@ -17,22 +18,57 @@ const Page = () => {
     const [startDate, setStartDate] = useState<Date | null>(null)
     const [endDate, setEndDate] = useState<Date | null>(null)
 
+    const prevOrdersRef = useRef<any[]>([]);
+    // Charger un son
+    const playSound = () => {
+        const audio = new Audio("/sounds/admin.mp3"); // chemin vers ton fichier dans public/sounds
+        audio.play();
+    };
 
     const fetchRestaurantOrders = async () => {
         try {
-            setLoading(true)
+            setLoading(true);
             const orders = await getOrders(period);
-            setRestaurantOrders(orders)
+
+            // Comparer avec les commandes précédentes
+            if (prevOrdersRef.current.length > 0) {
+                const prevIds = prevOrdersRef.current.map(o => o.id);
+                const newOrders = orders.filter(o => !prevIds.includes(o.id));
+
+                if (newOrders.length > 0) {
+                    playSound(); // Jouer le son seulement si nouvelle commande
+                }
+            }
+
+            // Mettre à jour les données
+            prevOrdersRef.current = orders;
+            setRestaurantOrders(orders);
+
         } catch (error) {
-            toast.error("Erreur lors de la récupération des commandes du restaurant")
+            toast.error("Erreur lors de la récupération des commandes du restaurant");
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }
+    };
+
+
+    // const fetchRestaurantOrders = async () => {
+    //     try {
+    //         setLoading(true)
+    //         const orders = await getOrders(period);
+    //         setRestaurantOrders(orders)
+    //     } catch (error) {
+    //         toast.error("Erreur lors de la récupération des commandes du restaurant")
+    //     } finally {
+    //         setLoading(false)
+    //     }
+    // }
 
     useEffect(() => {
         fetchRestaurantOrders()
     }, [startDate, endDate, period])
+
+
 
     const periodItems = [
         { value: 'TODAY', label: "Aujourd'hui", style: "bg-blue-100 text-blue-900" },
@@ -43,6 +79,7 @@ const Page = () => {
         { value: 'LAST_365_DAYS', label: "365 Derniers Jours", style: "bg-purple-100 text-purple-900" },
         { value: 'ALL_TIME', label: "TOUT", style: "bg-gray-100 text-gray-900" }
     ]
+
     return (
         <main className='min-h-screen px-2 md:px-4'>
             <div className="flex items-center justify-between p-4 px-0">
@@ -91,6 +128,7 @@ const Page = () => {
             <div className="w-full overflow-x-auto mt-4">
                 <ShowOrders
                     period={period}
+                    setRestaurantOrdersForStats={setRestaurantOrders}
                 />
             </div>
         </main>

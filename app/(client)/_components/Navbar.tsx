@@ -12,14 +12,14 @@ const Navbar = () => {
   const url = usePathname();
   return (
     <nav className='fixed top-0 left-0 right-0 z-50 h-16 md:h-14 flex items-center justify-center'>
-      <div className='w-10/11 md:w-8/10 md:px-[6%] px-2 py-1  bg-white dark:bg-zinc-900 flex items-center justify-between shadow-md rounded-full'>
+      <div className='w-10/11 md:w-8/10  p-0  bg-white dark:bg-zinc-800 flex items-center justify-between shadow-md rounded-full'>
         <Link
           className='flex items-center gap-1'
           href={url}
         >
           {restaurant?.logo ? (
             <img
-              className="size-full object-cover h-12 w-12 rounded-2xl"
+              className="size-full object-cover h-12 w-12 rounded-full"
               src={restaurant.logo}
               alt={restaurant.name || "Restaurant logo"}
               width={64}
@@ -42,7 +42,7 @@ const Navbar = () => {
 
         <div className='flex items-center gap-2 md:gap-4'>
           <Button
-            className='ml-2'
+            className='ml-2 hidden'
             onClick={() => {
               const launchButton = document.getElementById('launch-order-button');
               if (launchButton) {
@@ -53,7 +53,7 @@ const Navbar = () => {
             <Hamburger className="size-4" />
           </Button>
 
-          <div className=''>
+          <div className='hidden'>
             <ThemeToggle />
           </div>
         </div>

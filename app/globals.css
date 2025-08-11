@@ -150,3 +150,23 @@
     @apply bg-primary/10 rounded-full
   }
 }
+
+:root {
+  /* Variables pour le mode clair */
+  --color-text: #374151;
+  --axis-color: #e2e8f0;
+  --grid-line-color: rgba(226, 232, 240, 0.6);
+  --tooltip-bg: #ffffff;
+  --tooltip-color: #333333;
+  --tooltip-border: #e2e8f0;
+}
+
+.dark {
+  /* Variables pour le mode sombre */
+  --color-text: #e2e8f0;
+  --axis-color: #374151;
+  --grid-line-color: rgba(55, 65, 81, 0.6);
+  --tooltip-bg: #18181b;
+  --tooltip-color: #f3f4f6;
+  --tooltip-border: #4b5563;
+}

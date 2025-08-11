@@ -2,6 +2,7 @@
 import { getRestaurantCategories } from '@/app/actions/actions'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Category } from '@/lib/types'
+import { Loader } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -39,7 +40,10 @@ const SelectCategoryComponent = ({ categoryId, setCategoryId }: Props) => {
                     <SelectLabel>{categories.length > 0 ? "Catégories" : "Aucune catégorie disponible"}</SelectLabel>
                     {loading ? (
                         <SelectItem className='w-full' value="placeholder" disabled>
-                            Chargement...
+                            <div>
+                                <span>Chargement...</span>
+                                <Loader className="w-4 h-4 animate-spin"/>   
+                            </div>
                         </SelectItem>
                     ) : categories.length === 0 ? (
                         <SelectItem className='w-full' value="no-category" disabled>

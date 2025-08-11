@@ -86,7 +86,8 @@ export interface OrderProps {
     clientName?: string | null;
     total: number | null;
     status: OrderStatus;
-    updatedAt: Date;
+    updatedAt?: Date;
+    createdAt: Date;
 }
 
 export interface OrderItemProps {
@@ -99,6 +100,7 @@ export interface OrderItemProps {
         name: string;
         image?: string | null;
         price: number;
+        maxQuantity?: number;
     }
 }
 

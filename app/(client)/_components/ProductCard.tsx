@@ -53,7 +53,7 @@ const ProductCard = ({ product, handleRemoveProduct, handleAddProduct, orderProd
                         <h5 className='font-semibold truncate'>{product.name}</h5>
                     </div>
                     <p className='text-sm font-medium mt-2 truncate'>Prix: {product.price} {process.env.NEXT_PUBLIC_DEVISE}</p>
-                    <p className='text-sm text-gray-500 line-clamp-1 truncate'>{product.description}</p>
+                    <p className='text-sm text-gray-500 line-clamp-2 truncate'>{product.description}</p>
                     <p className='text-sm text-gray-500 truncate'>Stock: {product.stock}</p>
                 </div>
                 {
@@ -93,7 +93,7 @@ const ProductCard = ({ product, handleRemoveProduct, handleAddProduct, orderProd
                         <Button
                             variant="outline"
                             size="sm"
-                            className='mt-2'
+                            className='mt-2 text-primary'
                             onClick={() => {
                                 handleAddProduct(product)
                                 setIsAdded(true)
@@ -102,7 +102,8 @@ const ProductCard = ({ product, handleRemoveProduct, handleAddProduct, orderProd
                             }}
                             disabled={quantity < 0 || quantity > product.stock}
                         >
-                            Ajouter à votre plat
+                            Commander
+                            {/* Ajouter à votre plat */}
                         </Button>
                     )
                 }

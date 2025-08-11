@@ -8,8 +8,10 @@ import { useEffect } from "react"
 
 type Props = {
     setMediaFiles: (files: File[]) => void
+    mediaLinks?: string[]
+    setMediaLinks?: React.Dispatch<React.SetStateAction<string[]>>
 }
-export default function ImageUploaderComponent({ setMediaFiles }: Props) {
+export default function ImageUploaderComponent({ setMediaFiles, mediaLinks, setMediaLinks }: Props) {
     const maxSizeMB = 2
     const maxSize = maxSizeMB * 1024 * 1024
     const maxFiles = 3
@@ -31,6 +33,10 @@ export default function ImageUploaderComponent({ setMediaFiles }: Props) {
         multiple: true,
         maxFiles
     })
+
+    const removeFileByLink = (fileLink: string) => {
+        setMediaLinks?.((mediaLinks: string[]) => mediaLinks.filter(link => link !== fileLink));
+    }
 
     useEffect(() => {
         setMediaFiles(files.map(file => file.file).filter(file => file instanceof File))
@@ -54,11 +60,11 @@ export default function ImageUploaderComponent({ setMediaFiles }: Props) {
                     className="sr-only"
                     aria-label="Upload image file"
                 />
-                {files.length > 0 ? (
+                {files.length > 0 || (mediaLinks && mediaLinks?.length > 0) ? (
                     <div className="flex w-full flex-col gap-3">
                         <div className="flex items-center justify-between gap-2">
                             <h3 className="truncate text-sm font-medium">
-                                Fichiers ({files.length})
+                                Fichiers ({files.length + (mediaLinks?.length || 0)})
                             </h3>
                             <Button
                                 variant="outline"
@@ -88,6 +94,28 @@ export default function ImageUploaderComponent({ setMediaFiles }: Props) {
                                     <Button
                                         onClick={() => {
                                             removeFile(file.id);
+                                        }}
+                                        size="icon"
+                                        className="border-background focus-visible:border-background absolute -top-2 -right-2 size-6 rounded-full border-2 shadow-none"
+                                        aria-label="Remove image"
+                                    >
+                                        <XIcon className="size-3.5" />
+                                    </Button>
+                                </div>
+                            ))}
+                            {mediaLinks?.map((fileLink) => (
+                                <div
+                                    key={fileLink}
+                                    className="bg-accent relative aspect-square rounded-md"
+                                >
+                                    <img
+                                        src={fileLink}
+                                        alt={fileLink}
+                                        className="size-full rounded-[inherit] object-cover"
+                                    />
+                                    <Button
+                                        onClick={() => {
+                                            removeFileByLink(fileLink);
                                         }}
                                         size="icon"
                                         className="border-background focus-visible:border-background absolute -top-2 -right-2 size-6 rounded-full border-2 shadow-none"

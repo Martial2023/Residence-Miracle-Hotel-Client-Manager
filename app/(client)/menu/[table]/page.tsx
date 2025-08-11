@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import MinLoader from '@/components/MinLoader';
 import ProductCard from '../../_components/ProductCard';
 import ClientOrderComponent from '../../_components/ClientOrderComponent';
+import Link from 'next/link';
+import { Hamburger } from 'lucide-react';
 
 const page = () => {
   const params = useParams();
@@ -24,6 +26,8 @@ const page = () => {
   const [restaurantProducts, setRestaurantProducts] = useState<Product[]>([])
   const [orderProducts, setOrderProducts] = useState<{ productId: string; quantity: number; price: number }[]>([])
   const [loading, setLoading] = useState<boolean>(false)
+  const [clientOrders, setClientOrders] = useState<OrderDetails[]>([])
+  const [isExistingSavedOrders, setIsExistingSavedOrders] = useState<boolean>(false)
 
   const devise = process.env.NEXT_PUBLIC_DEVISE || 'FCFA'
 
@@ -37,7 +41,7 @@ const page = () => {
         clientName: null,
         total: 0,
         status: 'PENDING',
-        updatedAt: new Date(),
+        createdAt: new Date(),
         orderItems: []
       }
     }
@@ -53,7 +57,8 @@ const page = () => {
           id: product?.id || orderProduct.productId,
           name: product?.name || 'Produit inconnu',
           image: product?.images?.[0] || null,
-          price: product?.price || orderProduct.price
+          price: product?.price || orderProduct.price,
+          maxQuantity: product?.stock || 0,
         }
       }
     })
@@ -67,7 +72,7 @@ const page = () => {
       clientName: null,
       total,
       status: 'PENDING' as const,
-      updatedAt: new Date(),
+      createdAt: new Date(),
       orderItems
     }
   }, [orderProducts, restaurantProducts, tableId])
@@ -100,6 +105,12 @@ const page = () => {
     if (restaurantProducts.length === 0) {
       fetchRestaurantProducts()
       fetchRestaurantCategories()
+      const savedOrders = localStorage.getItem("clientOrders")
+      if (savedOrders) {
+        const parsedOrders = JSON.parse(savedOrders) as OrderDetails[]
+        setClientOrders(parsedOrders)
+        setIsExistingSavedOrders(parsedOrders.length > 0)
+      }
     }
   }, [fetchRestaurantProducts, fetchRestaurantCategories])
 
@@ -122,7 +133,7 @@ const page = () => {
       prev
         .map((p) =>
           p.productId === productId
-            ? { ...p, quantity: p.quantity - 1 }
+            ? { ...p, quantity: 0 }
             : p
         )
         .filter((p) => p.quantity > 0)
@@ -158,13 +169,16 @@ const page = () => {
     <main className='min-h-screen px-2 md:px-4 pb-20'>
       <Navbar />
 
-      <div className='w-full flex items-center justify-center mt-20'>
-        <Input
-          className='w-full max-w-md  rounded-full border-gray-300 dark:border-gray-600 focus:border-primary dark:focus:border-primary'
-          type='text'
-          placeholder={`Rechercher...`}
-          disabled={isRestaurantLoading}
-        />
+      <div className='w-full flex-col flex items-center justify-center mt-20'>
+        <Link
+          href={`/menu/${tableId}/client-order`}
+        >
+          <Button>
+            <Hamburger className="size-6" /> Votre commande
+          </Button>
+        </Link>
+
+        <p className="text-center text-2xl font-bold mt-4">Cher client, choisissez vos plats et boissons, puis lancez votre commande.</p>
       </div>
 
       <div className='w-full flex items-center justify-center my-8'>
@@ -192,6 +206,14 @@ const page = () => {
           )
         }
       </div>
+      <div className='w-full flex items-center justify-center mb-4'>
+        <Input
+          className='w-full max-w-md  rounded-full border-gray-300 dark:border-gray-600 focus:border-primary dark:focus:border-primary'
+          type='text'
+          placeholder={`Rechercher...`}
+          disabled={isRestaurantLoading}
+        />
+      </div>
 
       <div className='space-y-2 overflow-y-auto h-full w-full md:max-h-[70vh]'>
         {loading ? (
@@ -212,16 +234,20 @@ const page = () => {
             }
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4 px-2'>
               {
-                filteredProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    handleRemoveProduct={handleRemoveProduct}
-                    handleAddProduct={handleAddProduct}
-                    orderProducts={orderProducts}
-                    handleQuantityChange={handleQuantityChange}
-                  />
-                ))
+                filteredProducts.map((product) => {
+                  if (product.stock > 0) {
+                    return (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        handleRemoveProduct={handleRemoveProduct}
+                        handleAddProduct={handleAddProduct}
+                        orderProducts={orderProducts}
+                        handleQuantityChange={handleQuantityChange}
+                      />
+                    )
+                  }
+                })
               }
             </div>
           </>
@@ -229,21 +255,25 @@ const page = () => {
       </div>
 
       {orderProducts.length > 0 && (
-        <div className='mt-16 fixed bottom-0 left-0 right-0 pb-2 p-4 bg-white dark:bg-zinc-900 shadow-md flex items-center justify-center w-full rounded-full'>
+        <div className='mt-16 fixed bottom-0 left-0 right-0 pb-2 p-4 bg-white dark:bg-zinc-900 shadow-md flex items-center justify-center w-full md:mx-4 rounded-full'>
           <ClientOrderComponent
             clientOrder={clientOrder}
+            tableId={tableId}
             calculateTotalPrice={calculateTotalPrice}
             handleQuantityChange={handleQuantityChange}
             handleRemoveProduct={handleRemoveProduct}
             isLaunching={isLaunching}
             setIsLaunching={setIsLaunching}
+            setClientOrders={setClientOrders}
+            clientOrders={clientOrders}
           >
             <Button
-              className='w-full max-w-md p-4 rounded-full'
+              className='w-full max-w-md p-4 rounded-full uppercase'
               id='launch-order-button'
               disabled={isLaunching}
             >
-              <span className='text-sm'>Total: {calculateTotalPrice().toFixed(2)} {devise}</span>
+              <span className='text-sm'>Lancer la commande : {calculateTotalPrice().toFixed(2)} {devise}</span>
+              {/* <span className='text-sm'></span> */}
             </Button>
           </ClientOrderComponent>
         </div>

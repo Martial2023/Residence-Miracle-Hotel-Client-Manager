@@ -164,8 +164,6 @@ export async function getOrdersCategoriesData(period: PeriodTypes): Promise<Orde
             )
         };
 
-        console.log('Orders Categories Data:', response);
-
         return response
     } catch (error) {
         console.error('Error fetching orders categories data:', error);
@@ -197,6 +195,7 @@ export async function getOrders(period: PeriodTypes): Promise<OrderProps[]> {
                 total: true,
                 clientName: true,
                 updatedAt: true,
+                createdAt: true,
                 status: true,
                 table: {
                     select: {
@@ -214,6 +213,7 @@ export async function getOrders(period: PeriodTypes): Promise<OrderProps[]> {
             total: order.total,
             status: order.status,
             updatedAt: order.updatedAt,
+            createdAt: order.createdAt
         }));
     } catch (error) {
         console.error('Error fetching orders:', error);
@@ -257,6 +257,7 @@ export async function getOrderDetails(orderId: string): Promise<OrderDetails> {
             total: order.total,
             status: order.status,
             updatedAt: order.updatedAt,
+            createdAt: order.createdAt,
             orderItems: order.orderItems.map(orderItem => ({
                 id: orderItem.id,
                 productId: orderItem.product.id,
@@ -377,8 +378,8 @@ export async function validateOrder({ orderId, orderItems }: ValidateOrderProps)
 type LaunchOrderProps = {
     tableId: string;
     clientName?: string;
-    products: { 
-        productId: string; 
+    products: {
+        productId: string;
         quantity: number;
         price: number
     }[];
@@ -386,15 +387,21 @@ type LaunchOrderProps = {
 
 export async function launchOrder({ tableId, clientName, products }: LaunchOrderProps) {
     try {
-        if(!tableId) {
+        //Validation des paramètres
+        if (!products || !Array.isArray(products) || products.length === 0) {
+            throw new Error("Aucun produit valide fourni pour la commande");
+        }
+
+        //Vérifier ou créer la table
+        if (!tableId) {
             let table = await prisma.table.findFirst({
                 where: { name: process.env.DEFAULT_TABLE_NAME || "Générale" },
-            })
+            });
+
             if (!table) {
                 const restaurant = await prisma.restaurant.findFirst();
-                if (!restaurant) {
-                    throw new Error('Restaurant not found');
-                }
+                if (!restaurant) throw new Error("Restaurant introuvable");
+
                 table = await prisma.table.create({
                     data: {
                         name: process.env.DEFAULT_TABLE_NAME || "Générale",
@@ -402,32 +409,34 @@ export async function launchOrder({ tableId, clientName, products }: LaunchOrder
                     },
                 });
             }
-            tableId = table.id
+            tableId = table.id;
         }
-        // Validate stock availability for each product
+
+        //Vérifier stock (en dehors de la transaction)
+        const productIds = products.map(p => p.productId);
+        const stockData = await prisma.product.findMany({
+            where: { id: { in: productIds } },
+            select: { id: true, stock: true }
+        });
+
         for (const item of products) {
-            const product = await prisma.product.findUnique({
-                where: { id: item.productId },
-                select: { stock: true },
-            });
-
-            if (!product) {
-                throw new Error(`Product with ID ${item.productId} not found`);
-            }
-
+            const product = stockData.find(p => p.id === item.productId);
+            if (!product) throw new Error(`Produit introuvable: ${item.productId}`);
             if (product.stock < item.quantity) {
-                throw new Error(`Insufficient stock for product with ID ${item.productId}`);
+                throw new Error(`Stock insuffisant pour le produit: ${item.productId}`);
             }
         }
 
-        // Create the order and adjust stock in a transaction
-        const order = await prisma.$transaction(async (prisma) => {
-            // Create the order
-            const newOrder = await prisma.order.create({
+        //Transaction atomique (non interactive) pour éviter P2028
+        const totalPrice = products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
+
+        const [newOrder] = await prisma.$transaction([
+            prisma.order.create({
                 data: {
                     clientName: clientName || "Client",
                     status: "PENDING",
                     table: { connect: { id: tableId } },
+                    total: totalPrice,
                     orderItems: {
                         create: products.map(item => ({
                             product: { connect: { id: item.productId } },
@@ -435,35 +444,38 @@ export async function launchOrder({ tableId, clientName, products }: LaunchOrder
                             price: item.price,
                         })),
                     },
-                    total: products.reduce((sum, item) => sum + (item.price * item.quantity), 0),
                 },
                 include: {
-                    orderItems: {
-                        include: {
-                            product: true,
-                        },
-                    },
+                    orderItems: { include: { product: true } },
                 },
-            });
+            }),
+            ...products.map(item =>
+                prisma.product.update({
+                    where: { id: item.productId },
+                    data: { stock: { decrement: item.quantity } },
+                })
+            )
+        ]);
 
-            // Update the price for each order item and adjust stock
-            for (const orderItem of newOrder.orderItems) {
-                await prisma.product.update({
-                    where: { id: orderItem.productId },
-                    data: {
-                        stock: {
-                            decrement: orderItem.quantity,
-                        },
-                    },
-                });
+        return newOrder;
+
+    } catch (error: any) {
+        console.error("Error launching order:", error);
+        throw new Error(error.message || "Impossible de créer la commande");
+    }
+}
+
+export async function getOrderStatusById(orderId: string) {
+    try {
+        const orderStatus = await prisma.order.findFirst({
+            where: {
+                id: orderId,
             }
+        })
 
-            return newOrder;
-        });
-
-        return order;
+        return orderStatus?.status
     } catch (error) {
-        console.error('Error launching order:', error);
-        throw new Error('Failed to launch order');
+        console.error('Error fetching order statuses:', error);
+        throw new Error('Failed to fetch order statuses');
     }
 }

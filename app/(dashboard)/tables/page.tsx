@@ -1,4 +1,5 @@
 'use client'
+
 import { fetchRestaurant, getRestaurantTables } from '@/app/actions/actions'
 import MinLoader from '@/components/MinLoader'
 import React, { useEffect, useState } from 'react'
@@ -16,30 +17,25 @@ const Tables = () => {
     const [restaurant, setRestaurant] = useState<Restaurant | null>(null)
     const [restaurantTables, setRestaurantTables] = useState<Table[]>([])
     const [loading, setLoading] = useState<boolean>(true)
-    const [startDate, setStartDate] = useState<Date | null>(null)
-    const [endDate, setEndDate] = useState<Date | null>(null)
-
+    
     useEffect(() => {
         const getExistingRestaurant = async () => {
             try {
-                const restaurant = await fetchRestaurant();
-                setRestaurant(restaurant);
-            } catch (error) {
-                toast.error("Erreur lors de la récupération du restaurant");
+                const restaurant = await fetchRestaurant()
+                setRestaurant(restaurant)
+            } catch {
+                toast.error("Erreur lors de la récupération du restaurant")
             }
-        };
-        getExistingRestaurant();
-    }, []);
+        }
+        getExistingRestaurant()
+    }, [])
 
     const fetchRestaurantTables = async () => {
         try {
             setLoading(true)
-            const tables = await getRestaurantTables({
-                start: startDate,
-                end: endDate
-            });
+            const tables = await getRestaurantTables({ start: null, end: null })
             setRestaurantTables(tables)
-        } catch (error) {
+        } catch {
             toast.error("Erreur lors de la récupération des tables du restaurant")
         } finally {
             setLoading(false)
@@ -48,129 +44,109 @@ const Tables = () => {
 
     useEffect(() => {
         fetchRestaurantTables()
-    }, [startDate, endDate])
+    }, [])
 
     return (
-        <main className='min-h-screen'>
-            <div className="flex items-center justify-between p-4">
-                <h4 className="text-2xl font-bold">Tables</h4>
-                <p>{new Date().toLocaleDateString('fr-FR')}</p>
+        <main className="min-h-screen px-4 md:px-8 py-6 space-y-6">
+            <div className="flex items-center justify-between">
+                <h4 className="text-3xl font-bold tracking-tight text-primary dark:text-white">Tables</h4>
+
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                    {new Date().toLocaleDateString('fr-FR', {
+                        weekday: 'short',
+                        day: '2-digit',
+                        month: 'long',
+                        year: '2-digit'
+                    })}
+                </p>
             </div>
 
-            <div className='w-full'>
-                <CreateTableForm setTables={setRestaurantTables}>
-                    <Button variant={"outline"} className='m-4 text-primary/70 hover:text-primary/80 dark:text-white dark:hover:text-white bg-primary/10 dark:bg-primary/20'>
-                        Créer une table
-                    </Button>
-                </CreateTableForm>
+            <CreateTableForm setTables={setRestaurantTables}>
+                <Button className="text-white">
+                    + Nouvelle table
+                </Button>
+            </CreateTableForm>
 
-                <div className='flex flex-col gap-2 items-center justify-center p-4'>
-                    <div className='flex flex-col md:flex-row items-center gap-4 w-full md:max-w-8/10 rounded-xl bg-white dark:bg-zinc-800 p-6 shadow-md'>
-                        <div className='flex flex-col md:flex-row items-center gap-2 w-full'>
-                            <label htmlFor="startDate" className='text-sm font-medium md:whitespace-nowrap'>Date de début:</label>
-                            <input
-                                type="date"
-                                id="startDate"
-                                value={startDate ? startDate.toISOString().split('T')[0] : ''}
-                                onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : null)}
-                                className='border rounded-md p-2 w-full md:w-auto focus:outline-none focus:ring-2 focus:ring-primary'
-                            />
-                        </div>
-
-                        <div className='flex flex-col md:flex-row items-center gap-2 w-full'>
-                            <label htmlFor="endDate" className='text-sm font-medium md:whitespace-nowrap'>Date de fin:</label>
-                            <input
-                                type="date"
-                                id="endDate"
-                                value={endDate ? endDate.toISOString().split('T')[0] : ''}
-                                onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : null)}
-                                className='border rounded-md p-2 w-full md:w-auto focus:outline-none focus:ring-2 focus:ring-primary'
-                            />
-                        </div>
-                    </div>
+            {!loading && restaurantTables.length > 0 && (
+                <div className="bg-white dark:bg-zinc-800 shadow rounded-lg p-4">
+                    <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200">
+                        Tables disponibles: {restaurantTables.length}
+                    </h2>
                 </div>
-            </div>
+            )}
 
-            {
-                loading && (
-                    <div className='flex flex-col items-center justify-center h-96'>
-                        <MinLoader />
-                        <p>Chargement...</p>
-                    </div>
-                )
-            }
+            {loading && (
+                <div className="flex flex-col items-center justify-center h-96 space-y-2">
+                    <MinLoader />
+                    <p className="text-gray-500">Chargement des tables...</p>
+                </div>
+            )}
 
-            {
-                !loading && restaurantTables.length === 0 && (
-                    <div className='flex flex-col items-center justify-center h-96'>
-                        <div className='flex flex-col items-center justify-center'>
-                            <Table2 className='size-8 text-gray-500' />
-                            <p className='text-gray-500'>Aucune table trouvée</p>
-                        </div>
-                        <CreateTableForm setTables={setRestaurantTables}>
-                            <Button variant={"outline"} className='mt-4 text-primary/70 hover:text-primary/80'>
-                                Créer une table
-                            </Button>
-                        </CreateTableForm>
-                    </div>
-                )
-            }
+            {!loading && restaurantTables.length === 0 && (
+                <div className="flex flex-col items-center justify-center h-96 space-y-4">
+                    <Table2 className="w-12 h-12 text-gray-400" />
+                    <p className="text-gray-500">Aucune table trouvée</p>
+                    <CreateTableForm setTables={setRestaurantTables}>
+                        <Button className="bg-primary text-white hover:bg-primary/90">
+                            + Créer une table
+                        </Button>
+                    </CreateTableForm>
+                </div>
+            )}
 
-            {
-                restaurantTables.length > 0 && (
-                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4 p-4'>
-                        {
-                            restaurantTables.map((table) => (
-                                <Card key={table.id} className='p-4 py-2 hover:shadow-lg transition-shadow grid grid-cols-4 gap-3 dark:bg-zinc-800 cursor-pointer'>
-                                    <div className='col-span-1 w-full h-full'>
-                                        <div className='flex items-center justify-center w-full h-full rounded-xl  bg-primary'>
-                                            <Table2 className='size-6 text-white mb-2' />
-                                        </div>
-                                    </div>
+            {restaurantTables.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {restaurantTables.map((table) => (
+                        <Card
+                            key={table.id}
+                            className="p-5 bg-white dark:bg-zinc-800 shadow-sm hover:shadow-md transition-all duration-200"
+                        >
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="w-12 h-12 flex items-center justify-center rounded-full bg-primary text-white">
+                                    <Table2 className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h5 className="font-semibold text-lg">{table.name}</h5>
+                                    <p className="text-xs text-gray-500">Commandes : {table.numberOfOrders}</p>
+                                    <p className="text-xs text-gray-500">
+                                        Total : {table?.totalPrice?.toFixed(2) || 0}
+                                        {process.env.NEXT_PUBLIC_DEVISE}
+                                    </p>
+                                </div>
+                            </div>
 
-                                    <div className='col-span-3'>
-                                        <h5 className='font-semibold'>{table.name}</h5>
-                                        <p className='text-sm text-gray-500'>Ventes: {table.numberOfOrders}</p>
-                                        <p className='text-sm text-gray-500'>Total: {table?.totalPrice?.toFixed(2) || 0}{process.env.NEXT_PUBLIC_DEVISE} </p>
+                            <div className="flex flex-wrap gap-2 mt-4">
+                                {table.name !== process.env.NEXT_PUBLIC_DEFAULT_TABLE && (
+                                    <>
+                                        <EditTableForm setTables={setRestaurantTables} tableId={table.id} name={table.name}>
+                                            <Button size="sm" variant="secondary" className="flex items-center gap-1">
+                                                <Edit className="w-4 h-4" /> Modifier
+                                            </Button>
+                                        </EditTableForm>
 
-                                        <div className='mt-2 flex items-center gap-2'>
-                                            {
-                                                table.name !== process.env.NEXT_PUBLIC_DEFAULT_TABLE && (
-                                                    <>
-                                                        <EditTableForm setTables={setRestaurantTables} tableId={table.id} name={table.name}>
-                                                            <Button size={"sm"} className='bg-blue-500 text-white hover:bg-blue-600'>
-                                                                <Edit className='size-4' />
-                                                            </Button>
-                                                        </EditTableForm>
+                                        <DeleteTableForm setTables={setRestaurantTables} tableId={table.id} name={table.name}>
+                                            <Button size="sm" variant="destructive" className="flex items-center gap-1">
+                                                <Trash className="w-4 h-4" /> Supprimer
+                                            </Button>
+                                        </DeleteTableForm>
+                                    </>
+                                )}
 
-                                                        <DeleteTableForm setTables={setRestaurantTables} tableId={table.id} name={table.name}>
-                                                            <Button size={"sm"} variant={"destructive"} className='text-white bg-red-400 hover:bg-red-500'>
-                                                                <Trash className='size-4' />
-                                                            </Button>
-                                                        </DeleteTableForm>
-                                                    </>
-                                                )
-                                            }
-
-                                            <ShowTableQRCode
-                                                key={table.id}
-                                                name={table.name}
-                                                tableId={table.id}
-                                                logoUrl={restaurant?.logo || '/logo.png'}
-                                            >
-                                                <Button size={"sm"} className=' bg-green-500 text-white hover:bg-green-600'>
-                                                    <QrCode className='size-4' />
-                                                    QR Code
-                                                </Button>
-                                            </ShowTableQRCode>
-                                        </div>
-                                    </div>
-                                </Card>
-                            ))
-                        }
-                    </div>
-                )
-            }
+                                <ShowTableQRCode
+                                    key={table.id}
+                                    name={table.name}
+                                    tableId={table.id}
+                                    logoUrl={restaurant?.logo || '/logo.png'}
+                                >
+                                    <Button size="sm" className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white">
+                                        <QrCode className="w-4 h-4" /> QR Code
+                                    </Button>
+                                </ShowTableQRCode>
+                            </div>
+                        </Card>
+                    ))}
+                </div>
+            )}
         </main>
     )
 }

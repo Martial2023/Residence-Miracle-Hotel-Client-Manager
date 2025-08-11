@@ -51,7 +51,7 @@ const CreateCategoryForm = ({ children, setCategories }: Props) => {
             <CredenzaTrigger asChild>
                 {children}
             </CredenzaTrigger>
-            <CredenzaContent>
+            <CredenzaContent className='dark:bg-zinc-900'>
                 <CredenzaHeader>
                     <CredenzaTitle className='flex items-center gap-2'>
                         <SquareStack className='size-5 inline-block' />

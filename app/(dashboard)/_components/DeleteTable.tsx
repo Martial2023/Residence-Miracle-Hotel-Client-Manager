@@ -50,7 +50,7 @@ const DeleteTableForm = ({ children, tableId, setTables, name }: Props) => {
             <CredenzaTrigger asChild>
                 {children}
             </CredenzaTrigger>
-            <CredenzaContent>
+            <CredenzaContent className='dark:bg-zinc-900 pb-6 md:pb-2'>
                 <CredenzaHeader>
                     <CredenzaTitle className='flex items-center gap-2'>
                         <Table2 className='size-5 inline-block' />

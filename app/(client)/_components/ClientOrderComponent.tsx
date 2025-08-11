@@ -21,54 +21,88 @@ import { launchOrder } from '@/app/actions/statistics'
 type Props = {
     children: React.ReactNode,
     clientOrder: OrderDetails,
+    tableId: string | null,
     calculateTotalPrice: () => number
     handleQuantityChange: (productId: string, newQuantity: number) => void
     handleRemoveProduct: (productId: string) => void
     isLaunching?: boolean
     setIsLaunching: (isLaunching: boolean) => void
+    clientOrders: OrderDetails[]
+    setClientOrders: (orders: OrderDetails[]) => void
 }
 
-const ClientOrderComponent = ({ children, clientOrder, calculateTotalPrice, handleQuantityChange, handleRemoveProduct, setIsLaunching, isLaunching }: Props) => {
+const ClientOrderComponent = ({
+    children,
+    clientOrder,
+    tableId,
+    calculateTotalPrice,
+    handleQuantityChange,
+    handleRemoveProduct,
+    setIsLaunching,
+    isLaunching,
+    setClientOrders,
+    clientOrders
+}: Props) => {
     const [clientName, setClientName] = useState<string>('');
     const [open, setOpen] = useState<boolean>(false);
 
     const handleLaunchOrder = useCallback(async () => {
         try {
-          if (clientOrder.orderItems.length === 0) {
-            toast.error("Veuillez ajouter des produits à la commande")
-            return
-          }
-          setIsLaunching(true)
-          await launchOrder({
-            tableId: clientOrder.tableId || '',
-            products: clientOrder.orderItems.map(item => ({
-              productId: item.productId,
-              quantity: item.quantity,
-                price: item.price,
-            })),
-            clientName: clientName || undefined,
-          })
-          toast.success("Commande lancée avec succès")
+            if (clientOrder.orderItems.length === 0) {
+                toast.error("Veuillez ajouter des produits à la commande")
+                return
+            }
+            setIsLaunching(true)
+            const params = {
+                tableId: clientOrder.tableId || '',
+                products: clientOrder?.orderItems.map(item => ({
+                    productId: item.product.id,
+                    quantity: item.quantity,
+                    price: item.product.price,
+                })),
+                productsCount: clientOrder.orderItems.length,
+                clientName: clientName || undefined,
+            };
+
+            const order = await launchOrder(params)
+            toast.success("Commande lancée avec succès")
+            setClientOrders([...clientOrders, { ...order, tableName: clientOrder.tableName, clientName: clientName }])
+            setOpen(false)
+
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            localStorage.setItem("clientOrders", JSON.stringify([...clientOrders, { ...order, tableName: clientOrder.tableName, clientName: clientName }]
+                .filter((order) => order.status !== "COMPLETED" && new Date(order.createdAt) >= yesterday)
+                .map((order) => ({
+                    orderId: order.id,
+                    createdAt: order.createdAt,
+                    status: order.status
+                }))));
+
+            window.location.href = `/menu/${tableId}/client-order`;
+
         } catch (error) {
-          toast.error("Réessayez!! Erreur lors de la création de la commande")
+            toast.error("Réessayez!! Erreur lors de la création de la commande")
         } finally {
-          setIsLaunching(false)
+            setIsLaunching(false)
         }
-      }, [])
+    }, [clientOrder, clientName, clientOrders, tableId, setClientOrders, setIsLaunching, isLaunching])
     return (
         <Credenza open={open} onOpenChange={setOpen}>
             <CredenzaTrigger asChild>
                 {children}
             </CredenzaTrigger>
-            <CredenzaContent>
+            <CredenzaContent className='dark:bg-zinc-900'>
                 <CredenzaHeader>
-                    <CredenzaTitle className='flex items-center gap-2'>
-                        <div className='flex items-center gap-4'>
+                    <CredenzaTitle className='flex items-center gap-2 w-full'>
+                        <div className='flex items-center gap-4 w-full'>
                             <ShoppingBasket className='size-6 text-primary' />
-                            <div>
+                            <div className='w-full'>
                                 <Input
                                     type="text"
-                                    placeholder='Votre nom de client'
+                                    placeholder='Entrez votre nom de client'
+                                    className='w-full'
                                     value={clientName}
                                     onChange={(e) => setClientName(e.target.value)}
                                 />
@@ -86,7 +120,7 @@ const ClientOrderComponent = ({ children, clientOrder, calculateTotalPrice, hand
                 <CredenzaBody className='h-full overflow-y-auto'>
                     <div className="grid flex-1 auto-rows-min gap-2 md:px-4 px-2 overflow-y-auto h-full w-full md:max-h-[70vh]">
                         {clientOrder?.orderItems.map(item => (
-                            <div key={item.product.id} className="flex items-center justify-between p-4 border rounded-lg dark:border-zinc-700">
+                            <div key={item.product.id} className="flex items-center justify-between p-4 border rounded-lg dark:border-zinc-800 dark:bg-zinc-800">
                                 <div className="flex items-center gap-4">
                                     <img src={item.product.image ?? ''} alt={item.product.name} className="w-16 h-16 rounded-lg object-cover" />
                                     <div>
@@ -98,6 +132,7 @@ const ClientOrderComponent = ({ children, clientOrder, calculateTotalPrice, hand
                                     <Input
                                         type="number"
                                         value={item.quantity}
+                                        max={item.product.maxQuantity}
                                         onChange={(e) => handleQuantityChange(item.product.id, parseInt(e.target.value))}
                                         className="w-16"
                                     />
@@ -115,7 +150,7 @@ const ClientOrderComponent = ({ children, clientOrder, calculateTotalPrice, hand
                         disabled={isLaunching}
                         className='w-full'
                     >
-                        {isLaunching ? <Loader size='size-4 animate-spin' /> : "Lancer la commande"}
+                        {isLaunching ? <Loader className='w-4 h-4 animate-spin' /> : "Lancer la commande"}
                     </Button>
                 </CredenzaFooter>
             </CredenzaContent>
