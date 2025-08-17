@@ -55,7 +55,7 @@ const ProductCard = ({ isInside, product, handleRemoveProduct, handleAddProduct,
                     </div>
                     <p className='text-sm font-medium mt-2 truncate'>Prix: {product.price} {process.env.NEXT_PUBLIC_DEVISE}</p>
                     <p className='text-sm text-gray-500 line-clamp-2 truncate'>{product.description}</p>
-                    {!isInside && <p className='text-sm text-red-400'>Vous êtes à l'extérieur du restaurant</p>}
+                    {!isInside && <p className='text-sm text-red-400'>Vous êtes à l'extérieur du restaurant.</p>}
                 </div>
                 {
                     isInside && isAdded && (
