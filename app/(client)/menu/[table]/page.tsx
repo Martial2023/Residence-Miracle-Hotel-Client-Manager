@@ -28,8 +28,42 @@ const page = () => {
   const [loading, setLoading] = useState<boolean>(false)
   const [clientOrders, setClientOrders] = useState<OrderDetails[]>([])
   const [isExistingSavedOrders, setIsExistingSavedOrders] = useState<boolean>(false)
-
+  const [isInside, setIsInside] = useState<boolean>(false)
+ 
   const devise = process.env.NEXT_PUBLIC_DEVISE || 'FCFA'
+
+  const restaurantLat = parseFloat(process.env.NEXT_PUBLIC_LATITUDE || '12.345678')
+  const restaurantLng = parseFloat(process.env.NEXT_PUBLIC_LONGITUDE || '12.345678')
+  const radius = parseFloat(process.env.NEXT_PUBLIC_RADIUS || '60')
+
+  function getDistanceFromLatLonInM(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371000;
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+  useEffect(()=>{
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const userLat = position.coords.latitude;
+        const userLng = position.coords.longitude;
+
+        const distance = getDistanceFromLatLonInM(userLat, userLng, restaurantLat, restaurantLng);
+        setIsInside(distance <= radius);
+      },
+      (error) => {
+        toast.error("Veuillez autoriser l'accès à votre localisation pour continuer.");
+      }
+      );
+    } else {
+      toast.error("La géolocalisation n'est pas prise en charge par votre navigateur.");
+    }
+  }, [])
 
   // Generate clientOrder from orderProducts and restaurantProducts
   const clientOrder: OrderDetails = useMemo(() => {
@@ -239,6 +273,7 @@ const page = () => {
                     return (
                       <ProductCard
                         key={product.id}
+                        isInside={isInside}
                         product={product}
                         handleRemoveProduct={handleRemoveProduct}
                         handleAddProduct={handleAddProduct}
