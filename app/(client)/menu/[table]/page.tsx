@@ -54,7 +54,8 @@ const page = () => {
         const userLng = position.coords.longitude;
 
         const distance = getDistanceFromLatLonInM(userLat, userLng, restaurantLat, restaurantLng);
-        setIsInside(distance <= radius);
+        // setIsInside(distance <= radius);
+        setIsInside(true)
       },
       (error) => {
         toast.error("Veuillez autoriser l'accès à votre localisation pour continuer.");
