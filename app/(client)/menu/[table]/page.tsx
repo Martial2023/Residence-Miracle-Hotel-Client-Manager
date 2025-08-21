@@ -28,7 +28,7 @@ const page = () => {
   const [loading, setLoading] = useState<boolean>(false)
   const [clientOrders, setClientOrders] = useState<OrderDetails[]>([])
   const [isExistingSavedOrders, setIsExistingSavedOrders] = useState<boolean>(false)
-  const [isInside, setIsInside] = useState<boolean>(false)
+  const [isInside, setIsInside] = useState<boolean>(true)
  
   const devise = process.env.NEXT_PUBLIC_DEVISE || 'FCFA'
 
