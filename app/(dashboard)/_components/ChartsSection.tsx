@@ -5,21 +5,25 @@ import React, { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { ResponsivePie } from '@nivo/pie'
 import MinLoader from '@/components/MinLoader'
-import ChartOrders from './ChartOrders'
 import { ResponsiveBar } from '@nivo/bar'
 
 
 type Props = {
     period: PeriodTypes
+    data: OrdersCategoriesData | undefined,
+    setData: React.Dispatch<React.SetStateAction<OrdersCategoriesData | undefined>>
 }
-const ChartsSection = ({ period }: Props) => {
+const ChartsSection = ({ period, data, setData }: Props) => {
     const [loading, setLoading] = useState(true)
-    const [data, setData] = useState<OrdersCategoriesData>()
-
     const fetchData = async () => {
         try {
             setLoading(true)
             const response = await getOrdersCategoriesData(period)
+            response.ordersData = response?.ordersData.map((item, index) => ({
+                ...item,
+                chartLabel: item.label.length > 3 ? `${item.label.slice(0, 3)}${index}` : `${item.label}${index}`
+            }))
+            console.log(period, response)
             setData(response)
         } catch (error) {
             toast.error('Erreur lors de la récupération des données pour les graphiques')
@@ -33,7 +37,7 @@ const ChartsSection = ({ period }: Props) => {
     }, [period])
     return (
         <section className="md:px-6 py-4 grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div className='border border-gray-100 dark:border-zinc-700 col-span-1 md:col-span-3 bg-white dark:bg-zinc-800 rounded-lg shadow p-4 min-h-96'>
+            <div className='border border-gray-100 dark:border-zinc-700 col-span-1 md:col-span-3 bg-white dark:bg-zinc-800 rounded-lg shadow p-4 min-h-98 overflow-hidden'>
                 <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Ventes par produit</h4>
                 {
                     loading ? (
@@ -46,10 +50,10 @@ const ChartsSection = ({ period }: Props) => {
                             indexBy="label"
                             keys={['value']}
                             margin={{
-                                bottom: 55,
-                                left: 60,
+                                bottom: 40,
+                                left: 40,
                                 right: 10,
-                                top: 0,
+                                top: 5,
                             }}
                             padding={0.4}
                             valueScale={{ type: 'linear' }}
@@ -127,7 +131,7 @@ const ChartsSection = ({ period }: Props) => {
                     ) : (
                         <ResponsivePie
                             data={data?.categoriesData || []}
-                            margin={{ top: 40, right: 80, bottom: 90, left: 80 }}
+                            margin={{ top: 20, right: 20, bottom: 90, left: 20 }}
                             innerRadius={0.5}
                             padAngle={0.6}
                             cornerRadius={2}
@@ -143,8 +147,8 @@ const ChartsSection = ({ period }: Props) => {
                                     anchor: 'bottom',
                                     direction: 'row',
                                     translateY: 56,
-                                    itemWidth: 100,
-                                    itemHeight: 18,
+                                    itemWidth: 80,
+                                    itemHeight: 12,
                                     symbolShape: 'circle',
                                     itemTextColor: 'var(--tooltip-color)'
                                 }

@@ -53,7 +53,7 @@ const Navbar = () => {
             <Hamburger className="size-4" />
           </Button>
 
-          <div className='hidden'>
+          <div className=''>
             <ThemeToggle />
           </div>
         </div>

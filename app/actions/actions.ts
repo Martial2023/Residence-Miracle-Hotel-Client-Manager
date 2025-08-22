@@ -1,7 +1,8 @@
 'use server'
-import { Category, Product, Restaurant, Table } from '@/lib/types';
+import { Category, PeriodTypes, Product, Restaurant, Table } from '@/lib/types';
 import { prisma } from '../../lib/prisma';
 import { getUser } from '@/lib/auth-session';
+import { getBoundaries } from '@/lib/getBoudaries';
 
 export async function fetchRestaurant(): Promise<Restaurant | null> {
   try {
@@ -57,11 +58,10 @@ export async function createRestaurant({ name, address, phone, email, website, l
 }
 
 type RestaurantTablesParams = {
-  start?: Date | null;
-  end?: Date | null;
+  period: PeriodTypes
 };
 
-export async function getRestaurantTables({ start, end }: RestaurantTablesParams): Promise<Table[]> {
+export async function getRestaurantTables({ period }: RestaurantTablesParams): Promise<Table[]> {
   try {
     const connectedUser = await getUser();
     if (!connectedUser || !connectedUser.id) {
@@ -73,6 +73,8 @@ export async function getRestaurantTables({ start, end }: RestaurantTablesParams
       throw new Error("Restaurant not found");
     }
 
+    const { startDate, endDate } = getBoundaries(period);
+
     const tables = await prisma.table.findMany({
       where: { restaurantId: userRestaurant.id },
       include: {
@@ -81,9 +83,15 @@ export async function getRestaurantTables({ start, end }: RestaurantTablesParams
             id: true,
             createdAt: true,
             orderItems: {
+              where: {
+                createdAt: {
+                  gte: startDate,
+                  lte: endDate,
+                }
+              },
               select: {
                 id: true,
-                price: true
+                price: true,
               }
             }
           }
@@ -104,11 +112,59 @@ export async function getRestaurantTables({ start, end }: RestaurantTablesParams
         totalPrice
       };
     });
-    console.log("Response:\n", response);
     return response;
   } catch (error) {
     console.error("Error fetching restaurant tables:", error);
     throw new Error("Failed to fetch restaurant tables");
+  }
+}
+
+type UpdateRestaurantParams = {
+  name?: string;
+  address?: string;
+  phone?: string;
+  email?: string[];
+  website?: string;
+  logo?: string;
+  description?: string;
+  geoLongitude?: number | null;
+  geoLatitude?: number | null;
+  sendReportsClock?: Date | null;
+  radius?: number;
+}
+export async function updateRestaurant({ name, address, phone, email, website, logo, description, geoLongitude, geoLatitude, sendReportsClock, radius }: UpdateRestaurantParams) {
+  try {
+    const connectedUser = await getUser();
+    if (!connectedUser || !connectedUser.id) {
+      throw new Error("User not authenticated");
+    }
+
+    const userRestaurant = await prisma.restaurant.findFirst();
+    if (!userRestaurant) {
+      throw new Error("Restaurant not found");
+    }
+
+    const updatedRestaurant = await prisma.restaurant.update({
+      where: { id: userRestaurant.id },
+      data: {
+        name,
+        address,
+        phone,
+        email,
+        website,
+        logo,
+        description,
+        geoLongitude,
+        geoLatitude,
+        sendReportsClock,
+        radius
+      }
+    });
+
+    return updatedRestaurant;
+  } catch (error) {
+    console.error("Error updating restaurant:", error);
+    throw new Error("Failed to update restaurant");
   }
 }
 

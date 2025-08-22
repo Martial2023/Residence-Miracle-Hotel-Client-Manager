@@ -73,10 +73,13 @@ model Verification {
 /**
  * Models
  */
+
 model Restaurant {
   id          String     @id @default(uuid())
   name        String
   address     String?
+  geoLongitude Float?
+  geoLatitude  Float?
   logo        String?
   description String?
   phone       String?
@@ -88,6 +91,8 @@ model Restaurant {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
   products     Product[]
+  sendReportsClock DateTime?
+  radius      Float @default(60)
 
   @@map("restaurant")
 }

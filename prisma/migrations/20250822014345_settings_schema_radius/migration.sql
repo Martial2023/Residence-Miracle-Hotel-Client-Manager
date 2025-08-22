@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "restaurant" ADD COLUMN     "radius" DOUBLE PRECISION NOT NULL DEFAULT 60;

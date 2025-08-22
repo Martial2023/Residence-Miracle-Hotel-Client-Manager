@@ -7,6 +7,11 @@ export interface Restaurant {
     email: string[];
     website?: string | null;
     logo?: string | null;
+    description?: string | null;
+    geoLongitude?: number | null;
+    geoLatitude?: number | null;
+    sendReportsClock?: Date | null;
+    radius?: number;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -64,6 +69,7 @@ export interface OrdersCategoriesData {
     ordersData: {
         id: string;
         label: string;
+        chartLabel?: string;
         value: number;
     }[]
 }

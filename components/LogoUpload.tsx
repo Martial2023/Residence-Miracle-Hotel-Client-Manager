@@ -9,9 +9,10 @@ import { Label } from "./ui/label"
 
 type Props = {
     setMediaFile: (file: File | null) => void
+    fileUrl?: string | null
     label?: string
 }
-export default function LogoUpload({ setMediaFile, label }: Props) {
+export default function LogoUpload({ setMediaFile, fileUrl, label }: Props) {
     const [
         { files, isDragging },
         {
@@ -27,7 +28,7 @@ export default function LogoUpload({ setMediaFile, label }: Props) {
         accept: "image/*",
     })
 
-    const previewUrl = files[0]?.preview || null
+    const previewUrl = files[0]?.preview || fileUrl || null
     
     useEffect(() => {
         setMediaFile(files[0]?.file instanceof File ? files[0].file : null)

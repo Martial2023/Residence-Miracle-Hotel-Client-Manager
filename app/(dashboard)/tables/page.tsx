@@ -12,12 +12,26 @@ import EditTableForm from '../_components/EditTableForm'
 import DeleteTableForm from '../_components/DeleteTable'
 import { Restaurant, Table } from '@/lib/types'
 import ShowTableQRCode from '../_components/ShowTableQRCode'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { OrdersCategoriesData, PeriodTypes } from '@/lib/types'
 
 const Tables = () => {
     const [restaurant, setRestaurant] = useState<Restaurant | null>(null)
     const [restaurantTables, setRestaurantTables] = useState<Table[]>([])
     const [loading, setLoading] = useState<boolean>(true)
-    
+    const [period, setPeriod] = useState<PeriodTypes>("TODAY")
+
+
+    const periodItems = [
+        { value: 'TODAY', label: "Aujourd'hui", style: "bg-blue-100 text-blue-900" },
+        { value: 'YESTERDAY', label: "Hier", style: "bg-green-100 text-green-900" },
+        { value: 'LAST_7_DAYS', label: "7 Derniers Jours", style: "bg-yellow-100 text-yellow-900" },
+        { value: 'LAST_30_DAYS', label: "30 Derniers Jours", style: "bg-orange-100 text-orange-900" },
+        { value: 'LAST_90_DAYS', label: "90 Derniers Jours", style: "bg-red-100 text-red-900" },
+        { value: 'LAST_365_DAYS', label: "365 Derniers Jours", style: "bg-purple-100 text-purple-900" },
+        { value: 'ALL_TIME', label: "TOUT", style: "bg-gray-100 text-gray-900" }
+    ]
+
     useEffect(() => {
         const getExistingRestaurant = async () => {
             try {
@@ -33,7 +47,7 @@ const Tables = () => {
     const fetchRestaurantTables = async () => {
         try {
             setLoading(true)
-            const tables = await getRestaurantTables({ start: null, end: null })
+            const tables = await getRestaurantTables({ period })
             setRestaurantTables(tables)
         } catch {
             toast.error("Erreur lors de la récupération des tables du restaurant")
@@ -44,7 +58,7 @@ const Tables = () => {
 
     useEffect(() => {
         fetchRestaurantTables()
-    }, [])
+    }, [period])
 
     return (
         <main className="min-h-screen px-4 md:px-8 py-6 space-y-6">
@@ -60,6 +74,20 @@ const Tables = () => {
                     })}
                 </p>
             </div>
+            <div className='px-6'>
+                <Select value={period} onValueChange={(value: string) => setPeriod(value as PeriodTypes)}>
+                    <SelectTrigger className="cursor-pointer w-48 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+                        <SelectValue placeholder="Période" />
+                    </SelectTrigger>
+                    <SelectContent className=''>
+                        {periodItems.map((item) => (
+                            <SelectItem key={item.value} value={item.value} className={item.style + " cursor-pointer my-1"}>
+                                {item.label}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
 
             <CreateTableForm setTables={setRestaurantTables}>
                 <Button className="text-white">
@@ -68,10 +96,19 @@ const Tables = () => {
             </CreateTableForm>
 
             {!loading && restaurantTables.length > 0 && (
-                <div className="bg-white dark:bg-zinc-800 shadow rounded-lg p-4">
+                <div className="bg-white dark:bg-zinc-800 shadow rounded-lg p-4 flex items-center justify-between">
                     <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200">
                         Tables disponibles: {restaurantTables.length}
                     </h2>
+
+                    <CreateTableForm setTables={setRestaurantTables}>
+                        <Button
+                            variant="outline"
+                            className="hidden md:block"
+                        >
+                            + Nouvelle table
+                        </Button>
+                    </CreateTableForm>
                 </div>
             )}
 
@@ -94,7 +131,7 @@ const Tables = () => {
                 </div>
             )}
 
-            {restaurantTables.length > 0 && (
+            {!loading && restaurantTables.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {restaurantTables.map((table) => (
                         <Card

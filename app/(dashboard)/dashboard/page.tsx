@@ -1,12 +1,14 @@
 'use client'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { PeriodTypes } from '@/lib/types'
+import { OrdersCategoriesData, PeriodTypes } from '@/lib/types'
 import React, { useState } from 'react'
 import Statistics from '../_components/Statistics'
 import ChartsSection from '../_components/ChartsSection'
+import AIAnalysis from '../reports/_components/AIAnalysis'
 
 const Dashboard = () => {
   const [period, setPeriod] = useState<PeriodTypes>("TODAY")
+  const [data, setData] = useState<OrdersCategoriesData>()
 
 
   const periodItems = [
@@ -48,8 +50,17 @@ const Dashboard = () => {
       </div>
 
       <Statistics period={period} />
-      
-      <ChartsSection period={period} />
+
+      <ChartsSection
+        period={period}
+        data={data}
+        setData={setData}
+      />
+
+      <AIAnalysis
+        period={period}
+        data={data}
+      />
       {/* <RecentOrders period={period} /> */}
     </main>
   )

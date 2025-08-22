@@ -21,7 +21,7 @@ const Page = () => {
     const prevOrdersRef = useRef<any[]>([]);
     // Charger un son
     const playSound = () => {
-        const audio = new Audio("/sounds/admin.mp3"); // chemin vers ton fichier dans public/sounds
+        const audio = new Audio("/sounds/admin.mp3");
         audio.play();
     };
 
