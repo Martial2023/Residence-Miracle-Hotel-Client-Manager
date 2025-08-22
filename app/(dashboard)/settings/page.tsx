@@ -85,6 +85,7 @@ const page = () => {
                 geoLatitude: geoLatitude,
                 radius: radius
             });
+            toast.success('Établissement mis à jour avec succès.')
         } catch {
             toast.error('Erreur lors de la mise à jour de l\'établissement. Veuillez réessayer.')
         } finally {
