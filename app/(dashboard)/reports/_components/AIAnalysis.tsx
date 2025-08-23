@@ -18,12 +18,14 @@ const AIAnalysis = ({ period, data }: Props) => {
 
   const handleAnalyse = async () => {
     try {
-      setLoading(true);
-      const analysis = await getAiAnalysis({
-        period,
-        data
-      });
-      setAiAnalysis(analysis);
+      if(data) {
+        setLoading(true);
+        const analysis = await getAiAnalysis({
+          period,
+          data
+        });
+        setAiAnalysis(analysis);
+      }
     } catch {
       console.error("Analyse non obtenue");
     } finally {

@@ -241,14 +241,14 @@ const page = () => {
           )
         }
       </div>
-      <div className='w-full flex items-center justify-center mb-4'>
+      {/* <div className='w-full flex items-center justify-center mb-4'>
         <Input
           className='w-full max-w-md  rounded-full border-gray-300 dark:border-gray-600 focus:border-primary dark:focus:border-primary'
           type='text'
           placeholder={`Rechercher...`}
           disabled={isRestaurantLoading}
         />
-      </div>
+      </div> */}
 
       <div className='space-y-2 overflow-y-auto h-full w-full md:max-h-[70vh]'>
         {loading ? (
