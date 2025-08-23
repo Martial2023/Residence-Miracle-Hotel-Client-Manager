@@ -216,7 +216,7 @@ export default function Component({ period, setRestaurantOrdersForStats }: Props
     useEffect(() => {
         const interval = setInterval(async () => {
             setCounterRefresh((prev) => prev - 1);
-            if (counterRefresh <= 1 && period === "TODAY") {
+            if (counterRefresh <= 1 && period) {
                 setCounterRefresh(REFRESH_TIME);
                 const orders = await getOrders(period);
                 setData(orders);
