@@ -110,7 +110,7 @@ const LoginForm = ({
                                         setIsSigninWithGoogle(true)
                                         await signIn.social({
                                             provider: "google",
-                                            callbackURL: "/onboarding')"
+                                            callbackURL: "/onboarding"
                                         })
                                     }}
                                     disabled={loading}
