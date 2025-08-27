@@ -142,7 +142,7 @@ const AddOrderComponent = ({ children, tableId }: Props) => {
                         <ShoppingBasket className='size-5 inline-block' />
                         <span>Créer une commande</span>
                     </CredenzaTitle>
-                    <div className="flex gap-2 overflow-x-auto">
+                    <div className="flex max-w-2xl gap-2 overflow-x-scroll">
                         <Button
                             variant={selectedCategory === null ? "default" : "outline"}
                             size={"sm"}
